@@ -8,23 +8,30 @@
 using namespace std;
 using namespace Belzebub;
 
-void BelzebubChr::loadBuffer(const string &fileName, const int num)
+bool BelzebubChr::loadBuffer(const string &fileName, const int num)
 {
-    std::ifstream myfile(fileName, ios::in | ios::binary);
-    myfile.seekg(0, myfile.end);
-    const size_t fileSize = myfile.tellg();
-    vector<char> fileBuffer(fileSize);
-    myfile.seekg(0, myfile.beg);
-    myfile.read(fileBuffer.data(), fileSize);
-    myfile.close();
+    try {
+        std::ifstream myfile(fileName, ios::in | ios::binary);
+        myfile.seekg(0, myfile.end);
+        const size_t fileSize = myfile.tellg();
+        vector<char> fileBuffer(fileSize);
+        myfile.seekg(0, myfile.beg);
+        myfile.read(fileBuffer.data(), fileSize);
+        myfile.close();
 
-    vector<char> &buffer = num == 1 ? buffer1 : buffer2;
-    uLongf destLen = 1000000;
-    buffer.resize(destLen);
-    if (uncompress((Bytef*)buffer.data(), &destLen, (const Bytef*)fileBuffer.data(), (uLong)fileBuffer.size()) != Z_OK) {
-        cout << "uncompress error" << endl;
+        vector<char> &buffer = num == 1 ? buffer1 : buffer2;
+        uLongf destLen = 1000000;
+        buffer.resize(destLen);
+        if (uncompress((Bytef*)buffer.data(), &destLen, (const Bytef*)fileBuffer.data(), (uLong)fileBuffer.size()) != Z_OK) {
+            cout << "uncompress error" << endl;
+            return false;
+        }
+        buffer.resize(destLen);
+        return true;
     }
-    buffer.resize(destLen);
+    catch (...) {
+        return false;
+    }
 }
 
 void BelzebubChr::updateChecksum(const size_t position, const unsigned char value)
@@ -65,23 +72,24 @@ void BelzebubChr::printItems()
     cout << "item.position  type/value1/value2   unsigned type/value1/value2" << endl;
     for (int k = 0; k < 8; ++k) {
         const ItemPosition itemPosition = ItemPosition(k);
-        const ItemType itemType = getItemType(itemPosition);
+        const ItemMagic itemMagic = getItemMagic(itemPosition);
+        if (itemMagic == ItemMagic::NoItem) {
+            continue;
+        }
         string itemStr;
         switch (itemPosition) {
-        case ItemPosition::Body: itemStr = "body"; break;
-        case ItemPosition::Head: itemStr = "head"; break;
-        case ItemPosition::Ring1: itemStr = "ring1"; break;
-        case ItemPosition::Ring2: itemStr = "ring2"; break;
-        case ItemPosition::Amulet: itemStr = "amulet"; break;
-        case ItemPosition::Hand1: itemStr = "hand1"; break;
-        case ItemPosition::Hand2: itemStr = "hand2"; break;
-        case ItemPosition::Belt: itemStr = "belt"; break;
+            case ItemPosition::Body: itemStr = "body"; break;
+            case ItemPosition::Head: itemStr = "head"; break;
+            case ItemPosition::Ring1: itemStr = "ring1"; break;
+            case ItemPosition::Ring2: itemStr = "ring2"; break;
+            case ItemPosition::Amulet: itemStr = "amulet"; break;
+            case ItemPosition::Hand1: itemStr = "hand1"; break;
+            case ItemPosition::Hand2: itemStr = "hand2"; break;
+            case ItemPosition::Belt: itemStr = "belt"; break;
         }
         cout << std::setw(6) << std::left << itemStr << std::setw(5) << std::right << "type" << " " << std::setw(5) << std::right << "val1" << " " << std::setw(5) << std::right << "val2" << "  " << std::setw(5) << std::right << "uval1" << "  " << std::setw(5) << std::right << "uval2" << "  " << endl;
-        int bufferPosition = itemBufferStart.at(itemPosition);
-        bufferPosition += attributeStart.at(itemType);
-        for (int i = 0; i < attributeCount.at(itemType); ++i) {
-            const AttributeMode attributeMode = getAttributeMode(itemType, i);
+        for (int i = 0; i < attributeCount.at(itemMagic); ++i) {
+            const AttributeMode attributeMode = attributeModeMap.at({itemMagic, i});
             cout << k << "." << i;
             if (attributeMode == AttributeMode::Even) {
                 cout << " e ";
@@ -98,53 +106,15 @@ void BelzebubChr::printItems()
             else {
                 cout << "   ";
             }
-            int attributeType = 65535;
-            int value1 = 0;
-            int value2 = 0;
-            int uvalue1 = 0;
-            int uvalue2 = 0;
-            int attributeSize = 0;
-            if (itemType == ItemType::Rare || itemType == ItemType::Crafted || itemType == ItemType::Magic) {
-                const AttributeRare &attributeValue = (AttributeRare&)buffer1[bufferPosition];
-                attributeType = attributeValue.type;
-                value1 = attributeValue.value1;
-                value2 = attributeValue.value2;
-                uvalue1 = attributeValue.uvalue1;
-                uvalue2 = attributeValue.uvalue2;
-                attributeSize = sizeof(AttributeRare);
-            }
-            else if (itemType == ItemType::Unique) {
-                const AttributeUnique &attributeValue = (AttributeUnique&)buffer1[bufferPosition];
-                attributeType = attributeValue.type;
-                value1 = attributeValue.value1;
-                value2 = attributeValue.value2;
-                uvalue1 = attributeValue.uvalue1;
-                uvalue2 = attributeValue.uvalue2;
-                attributeSize = sizeof(AttributeUnique);
-            }
-            else if (itemType == ItemType::Set) {
-                const AttributeSet &attributeValue = (AttributeSet&)buffer1[bufferPosition];
-                attributeType = attributeValue.type;
-                value1 = attributeValue.value1;
-                value2 = attributeValue.value2;
-                uvalue1 = attributeValue.uvalue1;
-                uvalue2 = attributeValue.uvalue2;
-                attributeSize = sizeof(AttributeSet);
-            }
-            string typeName = "attribute not found";
-            if (attributeType == 65535 || (attributeType == 0 && (itemType == ItemType::Unique || itemType == ItemType::Set))) {
+            string typeName = "attribute unknown";
+            const Belzebub::AttributeValue attributeValue = getItemAttributeValue(itemPosition, i);
+            if (attributeValue.isNotUsed) {
                 typeName = "attribute not used";
             }
             else {
-                for (const auto &it : attrMap) {
-                    const AttributeData &attributeData = it.second;
-                    if (attributeMode == attributeData.mode && attributeType >= attributeData.start && attributeType <= attributeData.end) {
-                        typeName = attributeData.name;
-                    }
-                }
+                typeName = attributeValue.attributeData.name;
             }
-            cout << std::setw(5) << std::right << attributeType << " " << std::setw(5) << std::right << value1 << " " << std::setw(5) << std::right << value2 << "  " << std::setw(5) << std::right << uvalue1 << "  " << std::setw(5) << std::right << uvalue2 << "  " << typeName << endl;
-            bufferPosition += attributeSize;
+            cout << std::setw(5) << std::right << attributeValue.attributeType << " " << std::setw(5) << std::right << attributeValue.value1 << " " << std::setw(5) << std::right << attributeValue.value2 << "  " << std::setw(5) << std::right << attributeValue.uvalue1 << "  " << std::setw(5) << std::right << attributeValue.uvalue2 << "  " << typeName << endl;
         }
     }
 }
@@ -158,9 +128,17 @@ void BelzebubChr::setByte(const size_t position, const unsigned char value) {
     buffer1[position] = value;
 }
 
-void BelzebubChr::setWord(const int position, const int value) {
+void BelzebubChr::setWord(const size_t position, const int value) {
     setByte(position, value % 256);
     setByte(position + 1, value / 256);
+}
+
+int BelzebubChr::getByte(const size_t position) {
+    return (unsigned char)buffer1[position];
+}
+
+int BelzebubChr::getWord(const size_t position) {
+    return (unsigned char)buffer1[position] + ((unsigned char)buffer1[position + 1]) * 256;
 }
 
 void BelzebubChr::setGoldPositionLowerLeft(const int value) {
@@ -190,23 +168,36 @@ void BelzebubChr::setStaffSpell(const SpellType spellType, const int maxCharges)
     setByte(bufferPosition + 31, int(spellType));
 }
 
-ItemType BelzebubChr::getItemType(const ItemPosition itemPosition) {
-    ItemType itemType = ItemType::NoItem;
+ItemMagic BelzebubChr::getItemMagic(const ItemPosition itemPosition) {
+    ItemMagic itemMagic = ItemMagic::NoItem;
     int bufferPosition = itemBufferStart.at(itemPosition);
     const int t = buffer1[bufferPosition];
     if (t == 7 || t == 8 || t == 9 || t == 10 || t == 11 || t == 12 || t == 13) {
-        itemType = ItemType(t);
+        itemMagic = ItemMagic(t);
     }
-    return itemType;
+    return itemMagic;
 }
 
-void BelzebubChr::setItemType(const ItemPosition itemPosition, const ItemType itemType) {
+void BelzebubChr::setItemMagic(const ItemPosition itemPosition, const ItemMagic itemMagic) {
     int bufferPosition = itemBufferStart.at(itemPosition);
-    setByte(bufferPosition, int(itemType));
+    setByte(bufferPosition, int(itemMagic));
 }
 
-void BelzebubChr::setItemType2(const ItemPosition itemPosition, int value) {
-    // 8780  94 Composite Staff, 192 Gothic Staff, 193 Rune Staff, 194 Archon Staff
+const Belzebub::ItemType& BelzebubChr::getItemType(const Belzebub::ItemPosition itemPosition)
+{
+    int bufferPosition = itemBufferStart.at(itemPosition);
+    size_t typeIndex = 0;
+    const int number = getByte(bufferPosition + 20);
+    for (size_t i = 0; i < Belzebub::itemTypes.size(); ++i) {
+        if (Belzebub::itemTypes[i].number == number) {
+            typeIndex = i;
+            break;
+        }
+    }
+    return Belzebub::itemTypes[typeIndex];
+}
+
+void BelzebubChr::setItemType(const ItemPosition itemPosition, int value) {
     int bufferPosition = itemBufferStart.at(itemPosition);
     setByte(bufferPosition + 20, value);
 }
@@ -219,10 +210,10 @@ void BelzebubChr::setItemDurability(const ItemPosition itemPosition, const int v
 }
 
 void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attributePosition, const int attributeType, const int value1, const int value2) {
-    const ItemType itemType = getItemType(itemPosition);
+    const ItemMagic itemMagic = getItemMagic(itemPosition);
     int bufferPosition = itemBufferStart.at(itemPosition);
-    bufferPosition += attributeStart.at(itemType);
-    if (itemType == ItemType::Rare || itemType == ItemType::Crafted || itemType == ItemType::Magic) {
+    bufferPosition += attributeStart.at(itemMagic);
+    if (itemMagic == ItemMagic::Rare || itemMagic == ItemMagic::Crafted || itemMagic == ItemMagic::Magic) {
         bufferPosition += attributePosition * 6;
         if (value1 != 0) {
             setWord(bufferPosition, attributeType);
@@ -244,7 +235,7 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
             setByte(bufferPosition + 5, 0);
         }
     }
-    else if (itemType == ItemType::Unique) {
+    else if (itemMagic == ItemMagic::Unique) {
         bufferPosition += attributePosition * 5;
         if (value1 != 0) {
             setByte(bufferPosition, attributeType);
@@ -266,7 +257,7 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
             setByte(bufferPosition + 5, 0);
         }
     }
-    else if (itemType == ItemType::Set) {
+    else if (itemMagic == ItemMagic::Set) {
         bufferPosition += attributePosition * 6;
         if (value1 != 0) {
             setByte(bufferPosition, attributeType);
@@ -294,20 +285,131 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
 }
 
 void BelzebubChr::setItemAttribute(const ItemPosition itemPosition, const int attributePosition, const Attribute attribute, const int value1, const int value2) {
-    const ItemType itemType = getItemType(itemPosition);
+    const ItemMagic itemMagic = getItemMagic(itemPosition);
     if ((value1 < -125) || (value2 < -125) || (value1 > 32000) || (value2 > 32000)) {
         cout << "value too small/big <-125, 32000> in  "  << int(itemPosition) << "." << attributePosition << "  " << value1 << " " << value2 << endl;
         return;
     }
-    if (attributePosition < 0 || attributePosition >= attributeCount.at(itemType)) {
-        cout << "invalid position <0," << attributeCount.at(itemType) - 1 << "> in  "  << int(itemPosition) << "." << attributePosition << "  " << value1 << " " << value2 << endl;
+    if (attributePosition < 0 || attributePosition >= attributeCount.at(itemMagic)) {
+        cout << "invalid position <0," << attributeCount.at(itemMagic) - 1 << "> in  "  << int(itemPosition) << "." << attributePosition << "  " << value1 << " " << value2 << endl;
         return;
     }
     const AttributeData &attributeData = attrMap.at(attribute);
-    const AttributeMode attributeMode = getAttributeMode(itemType, attributePosition);
+    const AttributeMode attributeMode = attributeModeMap.at({itemMagic, attributePosition});
     if (attributeData.mode != attributeMode) {
         cout << "invalid attribute (even/odd/unique/set) in  " << int(itemPosition) << "." << attributePosition << " " << value1 << " " << value2 << endl;
         return;
     }
     setItemValue(itemPosition, attributePosition, attributeData.start, value1, value2);
+}
+
+Belzebub::AttributeValue BelzebubChr::getItemAttributeValue(const Belzebub::ItemPosition itemPosition, const int attributePosition)
+{
+    int bufferPosition = itemBufferStart.at(itemPosition);
+    const ItemMagic itemMagic = getItemMagic(itemPosition);
+    const AttributeMode attributeMode = attributeModeMap.at({itemMagic, attributePosition});
+    bufferPosition += attributeStart.at(itemMagic);
+    bufferPosition += attributeSizeMap.at(itemMagic) * attributePosition;
+    AttributeValue attributeValue;
+    if (itemMagic == ItemMagic::Rare || itemMagic == ItemMagic::Crafted || itemMagic == ItemMagic::Magic) {
+        const AttributeRare &attribute = (AttributeRare&)buffer1[bufferPosition];
+        attributeValue.attributeType = attribute.type;
+        attributeValue.value1 = attribute.value1;
+        attributeValue.value2 = attribute.value2;
+        attributeValue.uvalue1 = attribute.uvalue1;
+        attributeValue.uvalue2 = attribute.uvalue2;
+    }
+    else if (itemMagic == ItemMagic::Unique) {
+        const AttributeUnique &attribute = (AttributeUnique&)buffer1[bufferPosition];
+        attributeValue.attributeType = attribute.type;
+        attributeValue.value1 = attribute.value1;
+        attributeValue.value2 = attribute.value2;
+        attributeValue.uvalue1 = attribute.uvalue1;
+        attributeValue.uvalue2 = attribute.uvalue2;
+    }
+    else if (itemMagic == ItemMagic::Set) {
+        const AttributeSet &attribute = (AttributeSet&)buffer1[bufferPosition];
+        attributeValue.attributeType = attribute.type;
+        attributeValue.value1 = attribute.value1;
+        attributeValue.value2 = attribute.value2;
+        attributeValue.uvalue1 = attribute.uvalue1;
+        attributeValue.uvalue2 = attribute.uvalue2;
+    }
+    if (attributeValue.attributeType == 65535 || (attributeValue.attributeType == 0 && (itemMagic == ItemMagic::Unique || itemMagic == ItemMagic::Set))) {
+        attributeValue.isNotUsed = true;
+    }
+    else {
+        for (const auto &it : attrMap) {
+            const AttributeData &attributeData = it.second;
+            if (attributeMode == attributeData.mode && attributeValue.attributeType >= attributeData.start && attributeValue.attributeType <= attributeData.end) {
+                attributeValue.attributeData = attributeData;
+            }
+        }
+        if (attributeValue.attributeData.name.empty()) {
+            attributeValue.isUnknown = true;
+        }
+    }
+    return attributeValue;
+}
+
+bool BelzebubChr::isBody() {
+    return getItemMagic(ItemPosition::Body) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isHead() {
+    return getItemMagic(ItemPosition::Head) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isRing1() {
+    return getItemMagic(ItemPosition::Ring1) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isRing2() {
+    return getItemMagic(ItemPosition::Ring2) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isAmulet() {
+    return getItemMagic(ItemPosition::Amulet) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isHand1() {
+    return getItemMagic(ItemPosition::Hand1) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isHand2() {
+    return getItemMagic(ItemPosition::Hand2) != ItemMagic::NoItem;
+}
+bool BelzebubChr::isBelt() {
+    return getItemMagic(ItemPosition::Belt) != ItemMagic::NoItem;
+}
+
+bool BelzebubChr::isDurability(const Belzebub::ItemPosition itemPosition)
+{
+    int bufferPosition = itemBufferStart.at(itemPosition);
+    int durability = getWord(bufferPosition + 23);
+    return durability != 0;
+}
+
+int BelzebubChr::getItemDurability(const Belzebub::ItemPosition itemPosition)
+{
+    int bufferPosition = itemBufferStart.at(itemPosition);
+    return getWord(bufferPosition + 23);
+}
+
+Belzebub::SpellType BelzebubChr::getStaffSpell(const Belzebub::ItemPosition itemPosition)
+{
+    int bufferPosition = itemBufferStart.at(itemPosition);
+    return (Belzebub::SpellType)getByte(bufferPosition + 31);
+}
+
+int BelzebubChr::getStaffCharges(const Belzebub::ItemPosition itemPosition)
+{
+    int bufferPosition = itemBufferStart.at(itemPosition);
+    return getWord(bufferPosition + 27);
+}
+
+std::vector<Belzebub::AttributeData> BelzebubChr::getAttributes(const Belzebub::AttributeMode attributeMode)
+{
+    std::vector<Belzebub::AttributeData> attributes;
+    for (const auto &it : attrMap) {
+        const AttributeData &attributeData = it.second;
+        if (attributeMode == attributeData.mode) {
+            attributes.push_back(it.second);
+        }
+    }
+    return attributes;
 }

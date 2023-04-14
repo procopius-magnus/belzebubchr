@@ -11,15 +11,20 @@ CONFIG += c++17
 SOURCES += \
     ../belzebubchr.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    spellsdlg.cpp
 
 HEADERS += \
     ../belzebubchr.h \
     ../belzebubmagic.h \
-    mainwindow.h
+    ../itemtype.h \
+    ../spells.h \
+    mainwindow.h \
+    spellsdlg.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    spellsdlg.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

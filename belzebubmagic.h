@@ -1,6 +1,8 @@
 #ifndef BELZEBUBMAGIC_H
 #define BELZEBUBMAGIC_H
 
+#include "itemtype.h"
+
 #include <vector>
 #include <string>
 #include <map>
@@ -45,16 +47,7 @@ namespace Belzebub {
         };
     };
 
-    enum class SpellType : int {
-        FrostShard = 0, FireBolt, ChargedBolt, Healing, HealOther, HolyBolt, Inferno,
-        Warp, FireWall, Telekinesis, Lightning, TownPortal, Flash, CircleOfIce,
-        Phasing, LightningWall, StoneCurse, FireBall, FlameWave, ChainLightning, IceBlast,
-        empty1, MindMace, Elemental, Golem, FrozenOrb, MeteorCluster, Guardian,
-        Nova, Sentinel, Teleport, Apocalypse, empty2, Blizzard, Immolation,
-        DarkPack, empty3, Insanity, empty4, BoneSpirit, BloodStar, Sacrifice
-    };
     enum class ItemPosition {Body, Head, Ring1, Ring2, Amulet, Hand1, Hand2, Belt};
-    enum class ItemType {NoItem = 0, Quest = 7, Common = 8, Magic = 9, Rare = 10, Unique = 11, Set = 12, Crafted = 13};
     enum class Attribute {
         //Rare: position 0, 2, 4, 6
         //Crafted: position 0-3
@@ -144,39 +137,54 @@ namespace Belzebub {
         SetChanceToCastSpellOnStriking, SetChanceToCastSpellWhenStruck,
         SetIgnoreTargetDefense,
     };
-    enum class AttributeMode {Error, Even, Odd, Unique, Set};
+    enum class AttributeMode {Even, Odd, Unique, Set};
 
-    AttributeMode getAttributeMode(const ItemType itemType, const int attributePosition) {
-        AttributeMode attributeMode = AttributeMode::Error;
-        if (itemType == ItemType::Rare || itemType == ItemType::Magic) {
-            if (attributePosition % 2 == 0) {
-                attributeMode = AttributeMode::Even;
-            }
-            else {
-                attributeMode = AttributeMode::Odd;
-            }
-        }
-        else if (itemType == ItemType::Crafted) {
-            if (attributePosition < 4) {
-                attributeMode = AttributeMode::Even;
-            }
-            else {
-                attributeMode = AttributeMode::Odd;
-            }
-        }
-        else if (itemType == ItemType::Unique) {
-            attributeMode = AttributeMode::Unique;
-        }
-        else if (itemType == ItemType::Set) {
-            attributeMode = AttributeMode::Set;
-        }
-        return attributeMode;
-    }
+    const std::map<std::pair<ItemMagic, int>, AttributeMode> attributeModeMap = {
+        {{ItemMagic::Magic, 0}, AttributeMode::Even},
+        {{ItemMagic::Magic, 1}, AttributeMode::Odd},
+
+        {{ItemMagic::Rare, 0}, AttributeMode::Even},
+        {{ItemMagic::Rare, 1}, AttributeMode::Odd},
+        {{ItemMagic::Rare, 2}, AttributeMode::Even},
+        {{ItemMagic::Rare, 3}, AttributeMode::Odd},
+        {{ItemMagic::Rare, 4}, AttributeMode::Even},
+        {{ItemMagic::Rare, 5}, AttributeMode::Odd},
+        {{ItemMagic::Rare, 6}, AttributeMode::Even},
+        {{ItemMagic::Rare, 7}, AttributeMode::Odd},
+
+        {{ItemMagic::Crafted, 0}, AttributeMode::Even},
+        {{ItemMagic::Crafted, 1}, AttributeMode::Even},
+        {{ItemMagic::Crafted, 2}, AttributeMode::Even},
+        {{ItemMagic::Crafted, 3}, AttributeMode::Even},
+        {{ItemMagic::Crafted, 4}, AttributeMode::Odd},
+        {{ItemMagic::Crafted, 5}, AttributeMode::Odd},
+        {{ItemMagic::Crafted, 6}, AttributeMode::Odd},
+        {{ItemMagic::Crafted, 7}, AttributeMode::Odd},
+
+        {{ItemMagic::Unique, 0}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 1}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 2}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 3}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 4}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 5}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 6}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 7}, AttributeMode::Unique},
+        {{ItemMagic::Unique, 8}, AttributeMode::Unique},
+
+        {{ItemMagic::Set, 0}, AttributeMode::Set},
+        {{ItemMagic::Set, 1}, AttributeMode::Set},
+        {{ItemMagic::Set, 2}, AttributeMode::Set},
+        {{ItemMagic::Set, 3}, AttributeMode::Set},
+        {{ItemMagic::Set, 4}, AttributeMode::Set},
+        {{ItemMagic::Set, 5}, AttributeMode::Set},
+        {{ItemMagic::Set, 6}, AttributeMode::Set},
+        {{ItemMagic::Set, 7}, AttributeMode::Set},
+    };
 
     struct AttributeData {
         AttributeMode mode;
-        int start;
-        int end;
+        int start = -1;
+        int end = -1;
         std::string name;
     };
     const std::map<Attribute, AttributeData> attrMap = {
@@ -456,26 +464,48 @@ namespace Belzebub {
         {ItemPosition::Belt, 8952}
     };
 
-    const std::map<ItemType, int> attributeStart = {
-        {ItemType::NoItem, -1},
-        {ItemType::Quest, -1},
-        {ItemType::Common, -1},
-        {ItemType::Magic, 35},
-        {ItemType::Rare, 35},
-        {ItemType::Unique, 37},
-        {ItemType::Set, 39},
-        {ItemType::Crafted, 35},
-        };
+    const std::map<ItemMagic, int> attributeStart = {
+        {ItemMagic::NoItem, -1},
+        {ItemMagic::Quest, -1},
+        {ItemMagic::Common, -1},
+        {ItemMagic::Magic, 35},
+        {ItemMagic::Rare, 35},
+        {ItemMagic::Unique, 37},
+        {ItemMagic::Set, 39},
+        {ItemMagic::Crafted, 35},
+    };
 
-    const std::map<ItemType, int> attributeCount = {
-        {ItemType::NoItem, -1},
-        {ItemType::Quest, -1},
-        {ItemType::Common, -1},
-        {ItemType::Magic, 2},
-        {ItemType::Rare, 8},
-        {ItemType::Unique, 9},
-        {ItemType::Set, 8},
-        {ItemType::Crafted, 8}
+    const std::map<ItemMagic, int> attributeCount = {
+        {ItemMagic::NoItem, -1},
+        {ItemMagic::Quest, -1},
+        {ItemMagic::Common, -1},
+        {ItemMagic::Magic, 2},
+        {ItemMagic::Rare, 8},
+        {ItemMagic::Unique, 9},
+        {ItemMagic::Set, 8},
+        {ItemMagic::Crafted, 8}
+    };
+
+    const std::map<ItemMagic, int> attributeSizeMap = {
+        {ItemMagic::NoItem, -1},
+        {ItemMagic::Quest, -1},
+        {ItemMagic::Common, -1},
+        {ItemMagic::Magic, 6},
+        {ItemMagic::Rare, 6},
+        {ItemMagic::Unique, 5},
+        {ItemMagic::Set, 6},
+        {ItemMagic::Crafted, 6}
+    };
+
+    struct AttributeValue {
+        int attributeType = 65535;
+        int value1 = 0;
+        int value2 = 0;
+        int uvalue1 = 0;
+        int uvalue2 = 0;
+        AttributeData attributeData;
+        bool isNotUsed = false;
+        bool isUnknown = false;
     };
 }
 

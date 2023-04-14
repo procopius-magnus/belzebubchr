@@ -5,7 +5,7 @@ project(belzebubchr LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(belzebubchr main.cpp)
+add_executable(belzebubchr main.cpp belzebubchr.cpp)
 
 install(TARGETS belzebubchr
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
