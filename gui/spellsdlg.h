@@ -2,6 +2,10 @@
 #define SPELLSDLG_H
 
 #include <QDialog>
+#include <QLabel>
+#include <QSpinBox>
+
+#include <vector>
 
 namespace Ui {
 class SpellsDlg;
@@ -15,8 +19,12 @@ public:
     explicit SpellsDlg(QWidget *parent = nullptr);
     ~SpellsDlg();
 
+    std::vector<QLabel*> labelVec;
+    std::vector<QSpinBox*> spinBoxVec;
+
 private:
     Ui::SpellsDlg *ui;
+
 };
 
 #endif // SPELLSDLG_H

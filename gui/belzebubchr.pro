@@ -15,10 +15,11 @@ SOURCES += \
     spellsdlg.cpp
 
 HEADERS += \
+    ../attribute.h \
     ../belzebubchr.h \
-    ../belzebubmagic.h \
+    ../file.h \
     ../itemtype.h \
-    ../spells.h \
+    ../spell.h \
     mainwindow.h \
     spellsdlg.h
 

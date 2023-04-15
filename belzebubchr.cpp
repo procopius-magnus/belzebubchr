@@ -8,6 +8,13 @@
 using namespace std;
 using namespace Belzebub;
 
+BelzebubChr::BelzebubChr()
+{
+    for (auto &it : attrMap) {
+        const_cast<AttributeData&>(it.second).attribute = it.first;
+    }
+}
+
 bool BelzebubChr::loadBuffer(const string &fileName, const int num)
 {
     try {
@@ -27,6 +34,10 @@ bool BelzebubChr::loadBuffer(const string &fileName, const int num)
             return false;
         }
         buffer.resize(destLen);
+        if (num == 1) {
+            backupBuffer = buffer1;
+            isOk = true;
+        }
         return true;
     }
     catch (...) {
@@ -34,18 +45,37 @@ bool BelzebubChr::loadBuffer(const string &fileName, const int num)
     }
 }
 
-void BelzebubChr::updateChecksum(const size_t position, const unsigned char value)
+void BelzebubChr::updateChecksum(const size_t position, const char value)
 {
-    unsigned int checksum = (unsigned char)buffer1[12] + ((unsigned char)buffer1[13]) * 256;
-    checksum += int((unsigned char)buffer1[position] - value);
-    buffer1[12] = (unsigned char)(checksum % 256);
-    buffer1[13] = (unsigned char)(checksum / 256);
+    union __attribute__ ((packed)) ChecksumType {
+        char byte[2];
+        short word;
+    };
+    ChecksumType &checksum = (ChecksumType&)buffer1[12];
+    checksum.word += buffer1[position] - value;
 }
 
 void BelzebubChr::saveBuffer(const string &fileName) {
+    if (!isOk) {
+        return;
+    }
     uLongf destLen = 1000000;
     vector<char> fileBuffer(destLen);
     compress((Bytef*)fileBuffer.data(), &destLen, (const Bytef*)buffer1.data(), (uLong)buffer1.size());
+    fileBuffer.resize(destLen);
+    std::ofstream myfile(fileName, ios::out | ios::binary);
+    myfile.write(fileBuffer.data(), fileBuffer.size());
+    myfile.close();
+}
+
+void BelzebubChr::saveBackup(const std::string &fileName)
+{
+    if (!isOk) {
+        return;
+    }
+    uLongf destLen = 1000000;
+    vector<char> fileBuffer(destLen);
+    compress((Bytef*)fileBuffer.data(), &destLen, (const Bytef*)backupBuffer.data(), (uLong)backupBuffer.size());
     fileBuffer.resize(destLen);
     std::ofstream myfile(fileName, ios::out | ios::binary);
     myfile.write(fileBuffer.data(), fileBuffer.size());
@@ -57,7 +87,7 @@ void BelzebubChr::printDiff()
     cout << "position/signed diff/unsigned diff" << endl;
     size_t c = 0;
     for (size_t i = 0; i < buffer1.size(); ++i) {
-        if (buffer1[i] != buffer2[i] || (0 && i < c)) {
+        if (buffer1[i] != buffer2[i] || i == 12 || i == 13 || (1 && i < c)) {
             if (c == 0 && i >= 8280) {
                 c = i + 100;
             }
@@ -215,7 +245,7 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
     bufferPosition += attributeStart.at(itemMagic);
     if (itemMagic == ItemMagic::Rare || itemMagic == ItemMagic::Crafted || itemMagic == ItemMagic::Magic) {
         bufferPosition += attributePosition * 6;
-        if (value1 != 0) {
+        if (attributeType != (int)Attribute::NoAttribute) {
             setWord(bufferPosition, attributeType);
             if (value1 < 0) {
                 setByte(bufferPosition + 2, value1);
@@ -229,15 +259,15 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
         else {
             setByte(bufferPosition + 0, 255);
             setByte(bufferPosition + 1, 255);
-            setByte(bufferPosition + 2, 255);
-            setByte(bufferPosition + 3, 255);
+            setByte(bufferPosition + 2, 0);
+            setByte(bufferPosition + 3, 0);
             setByte(bufferPosition + 4, 0);
             setByte(bufferPosition + 5, 0);
         }
     }
     else if (itemMagic == ItemMagic::Unique) {
         bufferPosition += attributePosition * 5;
-        if (value1 != 0) {
+        if (attributeType != (int)Attribute::NoAttribute) {
             setByte(bufferPosition, attributeType);
             if (value1 < 0) {
                 setByte(bufferPosition + 1, value1);
@@ -251,15 +281,15 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
         else {
             setByte(bufferPosition + 0, 255);
             setByte(bufferPosition + 1, 255);
-            setByte(bufferPosition + 2, 255);
-            setByte(bufferPosition + 3, 255);
+            setByte(bufferPosition + 2, 0);
+            setByte(bufferPosition + 3, 0);
             setByte(bufferPosition + 4, 0);
             setByte(bufferPosition + 5, 0);
         }
     }
     else if (itemMagic == ItemMagic::Set) {
         bufferPosition += attributePosition * 6;
-        if (value1 != 0) {
+        if (attributeType != (int)Attribute::NoAttribute) {
             setByte(bufferPosition, attributeType);
             if (value1 < 0) {
                 setByte(bufferPosition + 1, value1);
@@ -273,10 +303,10 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
 
         }
         else {
-            setByte(bufferPosition + 0, 255);
-            setByte(bufferPosition + 1, 255);
-            setByte(bufferPosition + 2, 255);
-            setByte(bufferPosition + 3, 255);
+            setByte(bufferPosition + 0, -1);
+            setByte(bufferPosition + 1, -1);
+            setByte(bufferPosition + 2, -1);
+            setByte(bufferPosition + 3, -1);
             setByte(bufferPosition + 4, 0);
             setByte(bufferPosition + 5, 0);
             setByte(bufferPosition + 6, 0);
@@ -296,10 +326,11 @@ void BelzebubChr::setItemAttribute(const ItemPosition itemPosition, const int at
     }
     const AttributeData &attributeData = attrMap.at(attribute);
     const AttributeMode attributeMode = attributeModeMap.at({itemMagic, attributePosition});
-    if (attributeData.mode != attributeMode) {
+    if (attributeData.mode != attributeMode && attributeData.attribute != Attribute::NoAttribute) {
         cout << "invalid attribute (even/odd/unique/set) in  " << int(itemPosition) << "." << attributePosition << " " << value1 << " " << value2 << endl;
         return;
     }
+    //cout << int(itemPosition) << " " << attributePosition << " " << attributeData.start << " " << value1 << " " << value2 << endl;
     setItemValue(itemPosition, attributePosition, attributeData.start, value1, value2);
 }
 
@@ -402,13 +433,18 @@ int BelzebubChr::getStaffCharges(const Belzebub::ItemPosition itemPosition)
     return getWord(bufferPosition + 27);
 }
 
+int BelzebubChr::getSpellLevel(const Belzebub::SpellType spellType)
+{
+    return (unsigned char)buffer1[572 + 4 * int(spellType)];
+}
+
 std::vector<Belzebub::AttributeData> BelzebubChr::getAttributes(const Belzebub::AttributeMode attributeMode)
 {
     std::vector<Belzebub::AttributeData> attributes;
     for (const auto &it : attrMap) {
         const AttributeData &attributeData = it.second;
-        if (attributeMode == attributeData.mode) {
-            attributes.push_back(it.second);
+        if (attributeMode == attributeData.mode || attributeData.attribute == Attribute::NoAttribute) {
+            attributes.push_back(attributeData);
         }
     }
     return attributes;

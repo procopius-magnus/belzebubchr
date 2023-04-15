@@ -70,7 +70,7 @@ int main()
             belzebubChr.setSpellLevel(Belzebub::SpellType::Blizzard, 0);
             belzebubChr.setSpellLevel(Belzebub::SpellType::Immolation, 15);
 
-            belzebubChr.setSpellLevel(Belzebub::SpellType::DarkPack, 0);
+            belzebubChr.setSpellLevel(Belzebub::SpellType::DarkPact, 0);
             belzebubChr.setSpellLevel(Belzebub::SpellType::Insanity, 0);
             belzebubChr.setSpellLevel(Belzebub::SpellType::BoneSpirit, 15);
             belzebubChr.setSpellLevel(Belzebub::SpellType::BloodStar, 0);
@@ -78,6 +78,7 @@ int main()
         }
 
         if (0) {
+            // for testing
             int i = 1;
             int type = 137;
             belzebubChr.setItemValue(Belzebub::ItemPosition::Hand1, i, type, 17);
@@ -89,10 +90,19 @@ int main()
             belzebubChr.setItemValue(Belzebub::ItemPosition::Ring1, i, type, 17);
             belzebubChr.setItemValue(Belzebub::ItemPosition::Ring2, i, type, 17);
         }
+        {
+            // for testing
+            //belzebubChr.setDirect(8, 182 + 2);
+            //belzebubChr.setDirect(2356, 2 -> 0);
+            //belzebubChr.setDirect(4516, 0);
+        }
 
-        //belzebubChr.setDirect(8, 182 + 2);
-        //belzebubChr.setDirect(2356, 2 -> 0);
-        //belzebubChr.setDirect(4516, 0);
+        if (0) {
+            // example:
+            belzebubChr.setItemValue(Belzebub::ItemPosition::Ring2, 1, Belzebub::Attribute::OddStrength, 30);
+            belzebubChr.setItemValue(Belzebub::ItemPosition::Ring2, 2, Belzebub::Attribute::EvenResistAll, 40);
+            belzebubChr.setStaffSpell((int)Belzebub::SpellType::ChainLightning, 5000); // You must be equiped with (blue/yellow/orange) staff!
+        }
 
         belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
     }

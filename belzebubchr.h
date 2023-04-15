@@ -1,21 +1,25 @@
 #ifndef BELZEBUBCHR_H
 #define BELZEBUBCHR_H
 
-#include "belzebubmagic.h"
-#include "spells.h"
+#include "file.h"
+#include "spell.h"
 
 #include <vector>
 #include <string>
 
 class BelzebubChr {
+    std::vector<char> backupBuffer;
     std::vector<char> buffer1;
     std::vector<char> buffer2;
     bool loadBuffer(const std::string &fileName, const int num);
-    void updateChecksum(const size_t position, const unsigned char value);
+    void updateChecksum(const size_t position, const char value);
 public:
+    BelzebubChr();
+    bool isOk = false;
     bool loadBuffer1(const std::string &fileName) {return loadBuffer(fileName, 1);}
     bool loadBuffer2(const std::string &fileName) {return loadBuffer(fileName, 2);}
     void saveBuffer(const std::string &fileName);
+    void saveBackup(const std::string &fileName);
     void printDiff(); // Print file differences.
     void printItems(); // Print attributes on equiped items.
     void setDirect(const size_t position, const unsigned char value); // Set value without checksum.
@@ -51,6 +55,8 @@ public:
 
     Belzebub::SpellType getStaffSpell(const Belzebub::ItemPosition itemPosition);
     int getStaffCharges(const Belzebub::ItemPosition itemPosition);
+
+    int getSpellLevel(const Belzebub::SpellType spellType);
 
     std::vector<Belzebub::AttributeData> getAttributes(const Belzebub::AttributeMode attributeMode);
 };

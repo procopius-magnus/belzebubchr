@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "spellsdlg.h"
 
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QDateTime>
+#include <QMessageBox>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -31,47 +34,51 @@ MainWindow::~MainWindow()
 void MainWindow::loadSettings()
 {
     restoreGeometry(settings->value("main/geometry").toByteArray());
-    fileName = settings->value("main/fileName", fileName).toString();
-    fileDir = settings->value("main/fileDir", fileDir).toString();
     fileBackup = settings->value("main/fileBackup", fileBackup).toString();
-    ui->checkBackup->setChecked(settings->value("main/fileBackupCheck", true).toBool());
-    ui->labelCurrentFile->setText(fileName);
-    ui->checkBackup->setText("Backup files to this folder: " + fileBackup);
+    fileGame = settings->value("main/fileGame", fileGame).toString();
+    ui->labelBackupFile->setText(fileBackup);
+    ui->labelGameFile->setText(fileGame);
 }
 
 void MainWindow::saveSettings()
 {
     settings->setValue("main/geometry", saveGeometry());
-    settings->setValue("main/fileName", fileName);
-    settings->setValue("main/fileDir", fileDir);
     settings->setValue("main/fileBackup", fileBackup);
-    settings->setValue("main/fileBackupCheck", ui->checkBackup->isChecked());
+    settings->setValue("main/fileGame", fileGame);
     settings->sync();
 }
 
-void MainWindow::on_pushLoad_clicked()
+
+void MainWindow::on_pushBackup_clicked()
 {
-    QString newFileName = QFileDialog::getOpenFileName(this, "Open File", fileDir, "Saves (*.chr)");
+    QFileInfo fileInfo(fileBackup);
+    QString newFileName = QFileDialog::getOpenFileName(this, "Open File", fileInfo.absolutePath(), "Saves (*.chr)");
     if (newFileName.isEmpty()) {
         return;
     }
-    ui->labelCurrentFile->setText(newFileName);
-    fileName = newFileName;
-    QFileInfo fileInfo(fileName);
-    fileDir = fileInfo.absolutePath();
-    fileBackup = fileDir;
-    if (!fileBackup.endsWith('/')) {
-        fileBackup += "/";
-    }
-    fileBackup += "chr_backup/";
-    ui->checkBackup->setText("Backup files to this folder: " + fileBackup);
+    fileBackup = newFileName;
+    ui->labelBackupFile->setText(fileBackup);
     saveSettings();
 
     loadChrFile();
 }
 
+
+void MainWindow::on_pushGame_clicked()
+{
+    QFileInfo fileInfo(fileGame);
+    QString newFileName = QFileDialog::getOpenFileName(this, "Open File", fileInfo.absolutePath(), "Saves (*.chr)");
+    if (newFileName.isEmpty()) {
+        return;
+    }
+    fileGame = newFileName;
+    ui->labelGameFile->setText(fileGame);
+    saveSettings();
+}
+
 void MainWindow::loadChrFile()
 {
+    ui->pushSpells->setEnabled(false);
     ui->pushBody->setEnabled(false);
     ui->pushHead->setEnabled(false);
     ui->pushRing1->setEnabled(false);
@@ -80,16 +87,14 @@ void MainWindow::loadChrFile()
     ui->pushHand1->setEnabled(false);
     ui->pushHand2->setEnabled(false);
     ui->pushBelt->setEnabled(false);
-
     clearGuiData();
 
     belzebubChr = BelzebubChr();
-    if (!belzebubChr.loadBuffer1(fileName.toStdString())) {
+    if (!belzebubChr.loadBuffer1(fileBackup.toStdString())) {
         return;
     }
 
     ui->pushSpells->setEnabled(true);
-
     ui->pushBody->setEnabled(belzebubChr.isBody());
     ui->pushHead->setEnabled(belzebubChr.isHead());
     ui->pushRing1->setEnabled(belzebubChr.isRing1());
@@ -195,8 +200,55 @@ void MainWindow::clearGuiData()
     ui->labelDurability->clear();
 }
 
+void MainWindow::updateGuiLine(const int i, const int value1, const int value2)
+{
+    const int attributeIndex = comboVec[i]->currentData().toInt();
+    QComboBox *comboValue = comboValueVec[i];
+    QSpinBox *spinBox1 = spinVec1[i];
+    QSpinBox *spinBox2 = spinVec2[i];
+    comboValue->hide();
+    spinBox1->hide();
+    spinBox2->hide();
+    if (attributeIndex < 0) {
+        return;
+    }
+    const Belzebub::AttributeData &attributeData = Belzebub::attrMap.at((Belzebub::Attribute)attributeIndex);
+    if (attributeData.value1Min != Belzebub::ValueOff && attributeData.value1Min != Belzebub::ValueSpell) {
+        spinBox1->show();
+        spinBox1->setMinimum(attributeData.value1Min);
+        spinBox1->setMaximum(attributeData.value1Max);
+        if (value1 != Belzebub::ValueOff) {
+            spinBox1->setValue(value1);
+        }
+    }
+    if (attributeData.value2Min != Belzebub::ValueOff && attributeData.value2Min != Belzebub::ValueSpell) {
+        spinBox2->show();
+        spinBox2->setMinimum(attributeData.value2Min);
+        spinBox2->setMaximum(attributeData.value2Max);
+        if (value2 != Belzebub::ValueOff) {
+            spinBox2->setValue(value2);
+        }
+    }
+    if (attributeData.value1Min == Belzebub::ValueSpell || attributeData.value2Min == Belzebub::ValueSpell) {
+        comboValue->show();
+        comboValue->clear();
+        int selected = -1;
+        for (auto &it : Belzebub::spellNames) {
+            comboValue->addItem(QString::fromStdString(it.second), (int)it.first);
+            const int spellIndex = attributeData.value1Min == Belzebub::ValueSpell ? value1 : value2;
+            if (spellIndex == (int)it.first) {
+                selected = comboValue->count() - 1;
+            }
+        }
+        if (selected != -1) {
+            comboValue->setCurrentIndex(selected);
+        }
+    }
+}
+
 void MainWindow::updateItem(const Belzebub::ItemPosition itemPosition)
 {
+    updateItemData();
     clearGuiData();
 
     currentItemPosition = itemPosition;
@@ -216,6 +268,9 @@ void MainWindow::updateItem(const Belzebub::ItemPosition itemPosition)
         return;
     }
     ui->labelItemMagic->setText(itemMagicStr);
+    if (itemMagic == Belzebub::ItemMagic::Quest || itemMagic == Belzebub::ItemMagic::Common) {
+        return;
+    }
 
     const Belzebub::ItemType &itemType = belzebubChr.getItemType(currentItemPosition);
     ui->labelItemType->setText(QString::number(itemType.number) + "  " + QString::fromStdString(itemType.name));
@@ -247,34 +302,85 @@ void MainWindow::updateItem(const Belzebub::ItemPosition itemPosition)
         const Belzebub::AttributeValue attributeValue = belzebubChr.getItemAttributeValue(currentItemPosition, i);
         const Belzebub::AttributeMode attributeMode = Belzebub::attributeModeMap.at({itemMagic, i});
         QComboBox *comboBox = comboVec[i];
+        comboBox->blockSignals(true);
         comboBox->clear();
         comboBox->setEditable(true);
         comboBox->lineEdit()->setReadOnly(true);
         comboBox->lineEdit()->setAlignment(Qt::AlignRight);
+        /*
         if (attributeValue.isUnknown) {
-            comboBox->addItem("unknown attribute");
+            comboBox->addItem("unknown attribute", (int)Belzebub::Attribute::NoAttribute);
             comboBox->setItemData(comboBox->count() - 1, Qt::AlignLeft, Qt::TextAlignmentRole);
         }
         int selected = -1;
         {
-            comboBox->addItem("unused attribute");
+            comboBox->addItem("unused attribute", (int)Belzebub::Attribute::NoAttribute);
             comboBox->setItemData(comboBox->count() - 1, Qt::AlignLeft, Qt::TextAlignmentRole);
             if (attributeValue.isNotUsed) {
                 selected = comboBox->count() - 1;
             }
         }
+        */
+        int selected = -1;
         std::vector<Belzebub::AttributeData> attributes = belzebubChr.getAttributes(attributeMode);
         for (size_t j = 0; j < attributes.size(); ++j) {
             const Belzebub::AttributeData &attributeData = attributes[j];
-            comboBox->addItem(QString::fromStdString(attributeData.name));
+            comboBox->addItem(QString::fromStdString(attributeData.name), (int)attributeData.attribute);
             comboBox->setItemData(comboBox->count() - 1, Qt::AlignLeft, Qt::TextAlignmentRole);
-            if (attributeData.start == attributeValue.attributeData.start) {
+            if (attributeData.attribute != Belzebub::Attribute::NoAttribute && attributeData.start == attributeValue.attributeData.start) {
                 selected = comboBox->count() - 1;
             }
         }
         if (selected != -1) {
             comboBox->setCurrentIndex(selected);
         }
+        comboBox->blockSignals(false);
+
+        updateGuiLine(i, attributeValue.value1 , attributeValue.value2);
+    }
+}
+
+void MainWindow::updateItemData()
+{
+    static bool isFirst = true;
+    if (isFirst) {
+        isFirst = false;
+        return;
+    }
+    const Belzebub::ItemMagic itemMagic = belzebubChr.getItemMagic(currentItemPosition);
+    const int attributeCount = Belzebub::attributeCount.at(itemMagic);
+    for (int i = 0; i < attributeCount; ++i) {
+        QComboBox *comboBox = comboVec[i];
+        QComboBox *comboValue = comboValueVec[i];
+        QSpinBox *spinBox1 = spinVec1[i];
+        QSpinBox *spinBox2 = spinVec2[i];
+        int value1 = 0;
+        int value2 = 0;
+        int attributeType = comboBox->currentData().toInt();
+        if (attributeType >= 0) {
+            const Belzebub::AttributeData &attributeData = Belzebub::attrMap.at((Belzebub::Attribute)attributeType);
+            attributeType = attributeData.start;
+            if (attributeData.value1Min != Belzebub::ValueOff && attributeData.value1Min != Belzebub::ValueSpell) {
+                value1 = spinBox1->value();
+            }
+            if (attributeData.value2Min != Belzebub::ValueOff && attributeData.value2Min != Belzebub::ValueSpell) {
+                value2 = spinBox2->value();
+            }
+            if (attributeData.value1Min == Belzebub::ValueSpell) {
+                value1 = comboValue->currentData().toInt();
+                if (value1 == (int)Belzebub::SpellType::NoSpell) {
+                    attributeType = (int)Belzebub::Attribute::NoAttribute;
+                }
+            }
+            else if (attributeData.value2Min == Belzebub::ValueSpell) {
+                value2 = comboValue->currentData().toInt();
+                if (value2 == (int)Belzebub::SpellType::NoSpell) {
+                    attributeType = (int)Belzebub::Attribute::NoAttribute;
+                }
+            }
+        }
+        //qDebug() << i << comboBox->currentData().toInt() << attributeType << value1 << value2;
+        belzebubChr.setItemValue(currentItemPosition, i, attributeType, value1, value2);
     }
 }
 
@@ -324,4 +430,91 @@ void MainWindow::on_pushAmulet_clicked()
 {
     updateItem(Belzebub::ItemPosition::Amulet);
     activateButton(ui->pushAmulet);
+}
+
+void MainWindow::on_pushSpells_clicked()
+{
+    SpellsDlg spellsDlg;
+    for (int i = 0; i < 6 * 7; ++i) {
+        const Belzebub::SpellType spellType = (Belzebub::SpellType)i;
+        if (spellType == Belzebub::SpellType::empty1 || spellType == Belzebub::SpellType::empty2 || spellType == Belzebub::SpellType::empty3 || spellType == Belzebub::SpellType::empty4) {
+            spellsDlg.labelVec[i]->hide();
+            spellsDlg.spinBoxVec[i]->hide();
+            continue;
+        }
+        spellsDlg.labelVec[i]->setText(QString::fromStdString(Belzebub::spellNames.at(spellType)));
+        spellsDlg.spinBoxVec[i]->setValue(belzebubChr.getSpellLevel(spellType));
+    }
+    if (spellsDlg.exec() == QDialog::Accepted) {
+        for (int i = 0; i < 6 * 7; ++i) {
+            const Belzebub::SpellType spellType = (Belzebub::SpellType)i;
+            if (spellType == Belzebub::SpellType::empty1 || spellType == Belzebub::SpellType::empty2 || spellType == Belzebub::SpellType::empty3 || spellType == Belzebub::SpellType::empty4) {
+                continue;
+            }
+            belzebubChr.setSpellLevel(spellType, spellsDlg.spinBoxVec[i]->value());
+        }
+    }
+}
+
+
+void MainWindow::on_combo1_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(0);
+}
+void MainWindow::on_combo2_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(1);
+}
+void MainWindow::on_combo3_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(2);
+}
+void MainWindow::on_combo4_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(3);
+}
+void MainWindow::on_combo5_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(4);
+}
+void MainWindow::on_combo6_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(5);
+}
+void MainWindow::on_combo7_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(6);
+}
+void MainWindow::on_combo8_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(7);
+}
+void MainWindow::on_combo9_currentIndexChanged(int)
+{
+    updateItemData();
+    updateGuiLine(8);
+}
+
+void MainWindow::on_pushSave_clicked()
+{
+    updateItemData();
+    if (fileBackup.isEmpty() || fileGame.isEmpty() || fileBackup == fileGame) {
+        QMessageBox::critical(this, "File Problem", "Backup or game file not set or equal: " + fileBackup + " : " + fileGame);
+        return;
+    }
+    if (belzebubChr.isOk) {
+        belzebubChr.saveBuffer(fileGame.toStdString());
+        QMessageBox::information(this, "Save File", "Saved.");
+    }
+    else {
+        QMessageBox::information(this, "Save File", "Not saved.");
+    }
 }
