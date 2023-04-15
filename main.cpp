@@ -12,7 +12,7 @@ int main()
         belzebubChr.printItems();
     }
 
-    if (0) {
+    if (1) {
         // Print file differences.
         // Usage: backup your save, then drop one item to the ground and make another save.
         BelzebubChr belzebubChr;
@@ -99,9 +99,9 @@ int main()
 
         if (0) {
             // example:
-            belzebubChr.setItemValue(Belzebub::ItemPosition::Ring2, 1, Belzebub::Attribute::OddStrength, 30);
-            belzebubChr.setItemValue(Belzebub::ItemPosition::Ring2, 2, Belzebub::Attribute::EvenResistAll, 40);
-            belzebubChr.setStaffSpell((int)Belzebub::SpellType::ChainLightning, 5000); // You must be equiped with (blue/yellow/orange) staff!
+            belzebubChr.setItemAttribute(Belzebub::ItemPosition::Ring2, 1, Belzebub::Attribute::OddStrength, 30);
+            belzebubChr.setItemAttribute(Belzebub::ItemPosition::Ring2, 2, Belzebub::Attribute::EvenResistAll, 40);
+            belzebubChr.setStaffSpell(Belzebub::SpellType::ChainLightning, 5000); // You must be equiped with (blue/yellow/orange) staff!
         }
 
         belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");

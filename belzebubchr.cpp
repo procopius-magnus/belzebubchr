@@ -87,7 +87,7 @@ void BelzebubChr::printDiff()
     cout << "position/signed diff/unsigned diff" << endl;
     size_t c = 0;
     for (size_t i = 0; i < buffer1.size(); ++i) {
-        if (buffer1[i] != buffer2[i] || i == 12 || i == 13 || (1 && i < c)) {
+        if (buffer1[i] != buffer2[i] || i == 12 || i == 13 || (1 && i < c) || (0 && i == 8760)) {
             if (c == 0 && i >= 8280) {
                 c = i + 100;
             }
@@ -269,7 +269,11 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
         bufferPosition += attributePosition * 5;
         if (attributeType != (int)Attribute::NoAttribute) {
             setByte(bufferPosition, attributeType);
-            if (value1 < 0) {
+            if (value1 == 0 && value2 == 0) {
+                setByte(bufferPosition + 1, -1);
+                setByte(bufferPosition + 2, 0);
+            }
+            else if (value1 < 0) {
                 setByte(bufferPosition + 1, value1);
                 setByte(bufferPosition + 2, -1);
             }

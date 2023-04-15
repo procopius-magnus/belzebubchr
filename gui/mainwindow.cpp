@@ -275,7 +275,7 @@ void MainWindow::updateItem(const Belzebub::ItemPosition itemPosition)
     const Belzebub::ItemType &itemType = belzebubChr.getItemType(currentItemPosition);
     ui->labelItemType->setText(QString::number(itemType.number) + "  " + QString::fromStdString(itemType.name));
 
-    if (itemType.type == Belzebub::ItemHelperType::Staff) {
+    if (itemType.type == Belzebub::ItemHelperType::Staff && (itemMagic == Belzebub::ItemMagic::Magic || itemMagic == Belzebub::ItemMagic::Rare || itemMagic == Belzebub::ItemMagic::Crafted)) {
         ui->pushStaffSpell->setEnabled(true);
     }
 
