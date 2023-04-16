@@ -17,7 +17,7 @@ int main()
         // Usage: backup your save, then drop one item to the ground and make another save.
         BelzebubChr belzebubChr;
         belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves/save0.chr");
-        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves/save1.chr");
+        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves/save2.chr");
         belzebubChr.printDiff();
     }
 
@@ -104,7 +104,7 @@ int main()
             belzebubChr.setStaffSpell(Belzebub::SpellType::ChainLightning, 5000); // You must be equiped with (blue/yellow/orange) staff!
         }
 
-        belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
+        //belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
     }
 
     return 0;
