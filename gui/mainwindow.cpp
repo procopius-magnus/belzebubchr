@@ -213,6 +213,9 @@ void MainWindow::updateGuiLine(const int i, const int value1, const int value2)
         return;
     }
     const Belzebub::AttributeData &attributeData = Belzebub::attrMap.at((Belzebub::Attribute)attributeIndex);
+    if (attributeData.value1Min == Belzebub::ValueMinus1 || attributeData.value1Min == Belzebub::ValuePlus1) {
+        return;
+    }
     if (attributeData.value1Min != Belzebub::ValueOff && attributeData.value1Min != Belzebub::ValueSpell) {
         spinBox1->show();
         spinBox1->setMinimum(attributeData.value1Min);
@@ -307,20 +310,6 @@ void MainWindow::updateItem(const Belzebub::ItemPosition itemPosition)
         comboBox->setEditable(true);
         comboBox->lineEdit()->setReadOnly(true);
         comboBox->lineEdit()->setAlignment(Qt::AlignRight);
-        /*
-        if (attributeValue.isUnknown) {
-            comboBox->addItem("unknown attribute", (int)Belzebub::Attribute::NoAttribute);
-            comboBox->setItemData(comboBox->count() - 1, Qt::AlignLeft, Qt::TextAlignmentRole);
-        }
-        int selected = -1;
-        {
-            comboBox->addItem("unused attribute", (int)Belzebub::Attribute::NoAttribute);
-            comboBox->setItemData(comboBox->count() - 1, Qt::AlignLeft, Qt::TextAlignmentRole);
-            if (attributeValue.isNotUsed) {
-                selected = comboBox->count() - 1;
-            }
-        }
-        */
         int selected = -1;
         std::vector<Belzebub::AttributeData> attributes = belzebubChr.getAttributes(attributeMode);
         for (size_t j = 0; j < attributes.size(); ++j) {
@@ -356,10 +345,10 @@ void MainWindow::updateItemData()
         QSpinBox *spinBox2 = spinVec2[i];
         int value1 = 0;
         int value2 = 0;
-        int attributeType = comboBox->currentData().toInt();
-        if (attributeType >= 0) {
-            const Belzebub::AttributeData &attributeData = Belzebub::attrMap.at((Belzebub::Attribute)attributeType);
-            attributeType = attributeData.start;
+        Belzebub::Attribute attributeType = (Belzebub::Attribute)comboBox->currentData().toInt();
+        if (attributeType != Belzebub::Attribute::NoAttribute) {
+            const Belzebub::AttributeData &attributeData = Belzebub::attrMap.at(attributeType);
+            //attributeType = attributeData.start;
             if (attributeData.value1Min != Belzebub::ValueOff && attributeData.value1Min != Belzebub::ValueSpell) {
                 value1 = spinBox1->value();
             }
@@ -369,18 +358,18 @@ void MainWindow::updateItemData()
             if (attributeData.value1Min == Belzebub::ValueSpell) {
                 value1 = comboValue->currentData().toInt();
                 if (value1 == (int)Belzebub::SpellType::NoSpell) {
-                    attributeType = (int)Belzebub::Attribute::NoAttribute;
+                    attributeType = Belzebub::Attribute::NoAttribute;
                 }
             }
             else if (attributeData.value2Min == Belzebub::ValueSpell) {
                 value2 = comboValue->currentData().toInt();
                 if (value2 == (int)Belzebub::SpellType::NoSpell) {
-                    attributeType = (int)Belzebub::Attribute::NoAttribute;
+                    attributeType = Belzebub::Attribute::NoAttribute;
                 }
             }
         }
         //qDebug() << i << comboBox->currentData().toInt() << attributeType << value1 << value2;
-        belzebubChr.setItemValue(currentItemPosition, i, attributeType, value1, value2);
+        belzebubChr.setItemAttribute(currentItemPosition, i, attributeType, value1, value2);
     }
 }
 

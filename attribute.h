@@ -102,6 +102,8 @@ enum class AttributeMode {Even, Odd, Unique, Set};
 
 constexpr int ValueOff = -500;
 constexpr int ValueSpell = -501;
+constexpr int ValueMinus1 = -502;
+constexpr int ValuePlus1 = -503;
 
 struct AttributeData {
     AttributeMode mode;
@@ -220,14 +222,14 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::UniqueDamageTakenFromEnemies, {AttributeMode::Unique, 30, 30, "-X Damage Taken From Enemies", -125, 125}},
     {Attribute::UniqueHitPoints, {AttributeMode::Unique, 31, 31, "Hit Points : +X", -125, 32000}},
     {Attribute::UniqueMana, {AttributeMode::Unique, 32, 32, "Mana : +X", -125, 32000}},
-    {Attribute::UniqueHighDurability, {AttributeMode::Unique, 33, 33, "High Durability"}},
-    {Attribute::UniqueAlteredDurability, {AttributeMode::Unique, 34, 34, "Altered Durability"}},
-    {Attribute::UniqueIndestructible, {AttributeMode::Unique, 35, 35, "Indestructible", -1, -1}},
+    {Attribute::UniqueHighDurability, {AttributeMode::Unique, 33, 33, "High Durability", ValuePlus1, ValuePlus1}},
+    {Attribute::UniqueAlteredDurability, {AttributeMode::Unique, 34, 34, "Altered Durability", ValuePlus1, ValuePlus1}},
+    {Attribute::UniqueIndestructible, {AttributeMode::Unique, 35, 35, "Indestructible", ValuePlus1, ValuePlus1}},
     {Attribute::UniqueSpellLevels, {AttributeMode::Unique, 36, 36, "Spells Are Increased X Levels", -10, 10}},
     {Attribute::UniqueHitStealsLife, {AttributeMode::Unique, 37, 37, "Hit Steals X% Life", 1, 30}},
     {Attribute::UniqueHitStealsMana, {AttributeMode::Unique, 38, 38, "Hit Steals X% Mana", 1, 30}},
     {Attribute::UniqueRequirements, {AttributeMode::Unique, 39, 39, "Requirements +X%", -100, 100}},
-    {Attribute::UniqueOneHandedWeapon, {AttributeMode::Unique, 40, 40, "One Handed Weapon"}},
+    {Attribute::UniqueOneHandedWeapon, {AttributeMode::Unique, 40, 40, "One Handed Weapon", ValuePlus1, ValuePlus1}},
     {Attribute::UniqueUnusualItemDamage, {AttributeMode::Unique, 41, 41, "Unusual Item Damage", 1, 32000}},
     {Attribute::UniqueChanceToKnockback, {AttributeMode::Unique, 42, 42, "X% Change To Knockback", 1, 32000}},
     {Attribute::UniqueDamageVsDemon, {AttributeMode::Unique, 43, 43, "X% Damage Vs. Demon", 1, 32000}},
@@ -238,7 +240,7 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::UniqueSpellPower, {AttributeMode::Unique, 49, 49, "+X% Spell Power", 1, 32000}},
     {Attribute::UniqueExtraGold, {AttributeMode::Unique, 50, 50, "+X% Extra Gold From Monsters", 1, 32000}},
     {Attribute::UniqueMagicItemsChance, {AttributeMode::Unique, 51, 51, "+X% Chance Of Getting Magic Items", -125, 32000}},
-    {Attribute::UniqueHalfTrapDamage, {AttributeMode::Unique, 52, 52, "Absorbs Half Trap Damage"}},
+    {Attribute::UniqueHalfTrapDamage, {AttributeMode::Unique, 52, 52, "Absorbs Half Trap Damage", ValuePlus1, ValuePlus1}},
     {Attribute::UniqueAttackerTakesDamage, {AttributeMode::Unique, 53, 53, "Attacker Takes X - Y Damage", 1, 32000, 1, 32000}},
     {Attribute::UniqueIncreasedChanceOfBlocking, {AttributeMode::Unique, 54, 54, "X% Increased Chance Of Blocking", 1, 32000}},
     {Attribute::UniqueTargetResistances, {AttributeMode::Unique, 55, 55, "Reduces Target Resistances: X%", -125, -1}},
@@ -248,8 +250,8 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::UniqueTargetColdResistance, {AttributeMode::Unique, 59, 59, "Reduces Target Cold Resistance: X%", -125, -1}},
     {Attribute::UniqueTargetMagicResistance, {AttributeMode::Unique, 60, 60, "Reduces Target Magic Resistance: X%", -125, -1}},
     {Attribute::UniquePiercingAttack, {AttributeMode::Unique, 61, 61, "Piercing Attack: X%", 1, 32000}},
-    {Attribute::UniqueHalfFreezeDuration, {AttributeMode::Unique, 62, 62, "Half Freeze Duration"}},
-    {Attribute::UniqueCannotBeFrozen, {AttributeMode::Unique, 63, 63, "Cannot Be Frozen", 1, 1}},
+    {Attribute::UniqueHalfFreezeDuration, {AttributeMode::Unique, 62, 62, "Half Freeze Duration", ValuePlus1, ValuePlus1}},
+    {Attribute::UniqueCannotBeFrozen, {AttributeMode::Unique, 63, 63, "Cannot Be Frozen", ValuePlus1, ValuePlus1}},
     {Attribute::UniqueMaximumMana, {AttributeMode::Unique, 64, 64, "Increased Maximum Mana X%", 1, 30}},
     {Attribute::UniqueMaximumLife, {AttributeMode::Unique, 65, 65, "Increased Maximum Life X%", 1, 30}},
     {Attribute::UniqueHitPointsCharacterLevel, {AttributeMode::Unique, 66, 66, "Hit Points : +(L*X/Y) (Based On Character Level)", 1, 4, 1, 4}},
@@ -283,7 +285,7 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::UniqueDamageAbsorbedByMana, {AttributeMode::Unique, 100, 100, "X% Damage Absorbed By Mana", 1, 30}},
     {Attribute::UniqueChanceToCastSpellOnStriking, {AttributeMode::Unique, 101, 101, "Y% Chance To Cast Spell (Y) On Striking", ValueSpell, ValueSpell, 1, 100}},
     {Attribute::UniqueChanceToCastSpellWhenStruck, {AttributeMode::Unique, 102, 102, "Y% Chance To Cast Spell (Y) When Struck", ValueSpell, ValueSpell, 1, 100}},
-    {Attribute::UniqueIgnoreTargetDefense, {AttributeMode::Unique, 103, 103, "Ignore Target's Defense"}},
+    {Attribute::UniqueIgnoreTargetDefense, {AttributeMode::Unique, 103, 103, "Ignore Target's Defense", ValuePlus1, ValuePlus1}},
 
     {Attribute::SetStrength, {AttributeMode::Set, 1, 1, "+X To Strength", -125, 32000}},
     {Attribute::SetMagic, {AttributeMode::Set, 2, 2, "+X To Magic", -125, 32000}},
@@ -318,15 +320,15 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::SetDamageTakenFromEnemies, {AttributeMode::Set, 31, 31, "-X Damage Taken From Enemies", -125, 32000}},
     {Attribute::SetHitPoints, {AttributeMode::Set, 32, 32, "Hit Points : +X", -125, 32000}},
     {Attribute::SetMana, {AttributeMode::Set, 33, 33, "Mana : +X", -125, 32000}},
-    {Attribute::SetHighDurability, {AttributeMode::Set, 34, 34, "High Durability"}},
-    {Attribute::SetAlteredDurability, {AttributeMode::Set, 35, 35, "Altered Durability"}},
-    {Attribute::SetIndestructible, {AttributeMode::Set, 36, 36, "Indestructible", -1, -1}},
+    {Attribute::SetHighDurability, {AttributeMode::Set, 34, 34, "High Durability", ValuePlus1, ValuePlus1}},
+    {Attribute::SetAlteredDurability, {AttributeMode::Set, 35, 35, "Altered Durability", ValuePlus1, ValuePlus1}},
+    {Attribute::SetIndestructible, {AttributeMode::Set, 36, 36, "Indestructible", ValuePlus1, ValuePlus1}},
     {Attribute::SetSpellLevels, {AttributeMode::Set, 37, 37, "Spells Are Increased X Levels", -10, 10, ValueOff, ValueOff}},
     {Attribute::SetHitStealsLife, {AttributeMode::Set, 38, 38, "Hit Steals X% Life", 1, 30}},
     {Attribute::SetHitStealsMana, {AttributeMode::Set, 39, 39, "Hit Steals X% Mana", 1, 30}},
     {Attribute::SetRequirements, {AttributeMode::Set, 40, 40, "Requirements +X%", -100, 100}},
-    {Attribute::SetOneHandedWeapon, {AttributeMode::Set, 41, 41, "One Handed Weapon"}},
-    {Attribute::SetOffhandWeapon, {AttributeMode::Set, 42, 42, "Offhand Weapon"}},
+    {Attribute::SetOneHandedWeapon, {AttributeMode::Set, 41, 41, "One Handed Weapon", ValuePlus1, ValuePlus1}},
+    {Attribute::SetOffhandWeapon, {AttributeMode::Set, 42, 42, "Offhand Weapon", ValuePlus1, ValuePlus1}},
     {Attribute::SetChanceToKnockback, {AttributeMode::Set, 43, 43, "X% Change To Knockback", 1, 100}},
     {Attribute::SetDamageVsDemon, {AttributeMode::Set, 44, 44, "X% Damage Vs. Demon", 1, 32000}},
     {Attribute::SetDamageVsUndead, {AttributeMode::Set, 45, 45, "X% Damage Vs. Undead", 1, 32000}},
@@ -335,7 +337,7 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::SetSpellPower, {AttributeMode::Set, 50, 50, "+X% Spell Power", 1, 32000}},
     {Attribute::SetExtraGold, {AttributeMode::Set, 51, 51, "+X% Extra Gold From Monsters", 1, 32000}},
     {Attribute::SetMagicItemsChance, {AttributeMode::Set, 52, 52, "+X% Chance Of Getting Magic Items", -125, 32000}},
-    {Attribute::SetHalfTrapDamage, {AttributeMode::Set, 53, 53, "Absorbs Half Trap Damage"}},
+    {Attribute::SetHalfTrapDamage, {AttributeMode::Set, 53, 53, "Absorbs Half Trap Damage", ValuePlus1, ValuePlus1}},
     {Attribute::SetAttackerTakesDamage, {AttributeMode::Set, 54, 54, "Attacker Takes X - Y Damage", 1, 32000, 1, 32000}},
     {Attribute::SetTargetResistances, {AttributeMode::Set, 55, 55, "Reduces Target Resistances: X%", -125, -1}},
     {Attribute::SetTargetPhysicalResistances, {AttributeMode::Set, 56, 56, "Reduces Target Physical Resistance: X%", -125, -1}},
@@ -344,8 +346,8 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::SetTargetColdResistance, {AttributeMode::Set, 59, 59, "Reduces Target Cold Resistance: X%", -125, -1}},
     {Attribute::SetTargetMagicResistance, {AttributeMode::Set, 60, 60, "Reduces Target Magic Resistance: X%", -125, -1}},
     {Attribute::SetPiercingAttack, {AttributeMode::Set, 61, 61, "Piercing Attack: X%", 1, 32000}},
-    {Attribute::SetHalfFreezeDuration, {AttributeMode::Set, 62, 62, "Half Freeze Duration"}},
-    {Attribute::SetCannotBeFrozen, {AttributeMode::Set, 63, 63, "Cannot Be Frozen", 1, 1}},
+    {Attribute::SetHalfFreezeDuration, {AttributeMode::Set, 62, 62, "Half Freeze Duration", ValuePlus1, ValuePlus1}},
+    {Attribute::SetCannotBeFrozen, {AttributeMode::Set, 63, 63, "Cannot Be Frozen", ValuePlus1, ValuePlus1}},
     {Attribute::SetMaximumMana, {AttributeMode::Set, 64, 64, "Increased Maximum Mana X%", 1, 30}},
     {Attribute::SetMaximumLife, {AttributeMode::Set, 65, 65, "Increased Maximum Life X%", 1, 30}},
     {Attribute::SetHitPointsCharacterLevel, {AttributeMode::Set, 66, 66, "Hit Points : +(L*X/Y) (Based On Character Level)", 1, 4, 1, 4}},
@@ -379,7 +381,7 @@ const std::map<Attribute, AttributeData> attrMap = {
     {Attribute::SetDamageAbsorbedByMana, {AttributeMode::Set, 100, 100, "X% Damage Absorbed By Mana", 1, 30}},
     {Attribute::SetChanceToCastSpellOnStriking, {AttributeMode::Set, 101, 101, "Y% Chance To Cast Spell (Y) On Striking", ValueSpell, ValueSpell, 1, 100}},
     {Attribute::SetChanceToCastSpellWhenStruck, {AttributeMode::Set, 102, 102, "Y% Chance To Cast Spell (Y) When Struck", ValueSpell, ValueSpell, 1, 100}},
-    {Attribute::SetIgnoreTargetDefense, {AttributeMode::Set, 103, 103, "Ignore Target's Defense"}},
+    {Attribute::SetIgnoreTargetDefense, {AttributeMode::Set, 103, 103, "Ignore Target's Defense", ValuePlus1, ValuePlus1}},
 };
 
 }

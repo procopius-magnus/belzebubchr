@@ -37,7 +37,7 @@ public:
     void setItemType(const Belzebub::ItemPosition itemPosition, int value);
     void setItemDurability(const Belzebub::ItemPosition itemPosition, const int value);
     void setItemValue(const Belzebub::ItemPosition itemPosition, const int attributePosition, const int attributeType, const int value1, const int value2 = 0);
-    void setItemAttribute(const Belzebub::ItemPosition itemPosition, const int attributePosition, const Belzebub::Attribute attribute, const int value1, const int value2 = 0);
+    void setItemAttribute(const Belzebub::ItemPosition itemPosition, const int attributePosition, const Belzebub::Attribute attribute, int value1, const int value2 = 0);
 
     Belzebub::AttributeValue getItemAttributeValue(const Belzebub::ItemPosition itemPosition, const int attributePosition);
 

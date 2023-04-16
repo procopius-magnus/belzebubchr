@@ -17,7 +17,7 @@ int main()
         // Usage: backup your save, then drop one item to the ground and make another save.
         BelzebubChr belzebubChr;
         belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves/save0.chr");
-        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves/save2.chr");
+        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves/save1.chr");
         belzebubChr.printDiff();
     }
 

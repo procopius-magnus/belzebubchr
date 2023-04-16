@@ -269,16 +269,21 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
         bufferPosition += attributePosition * 5;
         if (attributeType != (int)Attribute::NoAttribute) {
             setByte(bufferPosition, attributeType);
-            /*
-            if (value1 < 0) {
+            if (value1 == ValueMinus1) {
+                setByte(bufferPosition + 1, -1);
+                setByte(bufferPosition + 2, 0);
+            }
+            else if (value1 == ValuePlus1) {
+                setByte(bufferPosition + 1, 1);
+                setByte(bufferPosition + 2, 0);
+            }
+            else if (value1 < 0) {
                 setByte(bufferPosition + 1, value1);
                 setByte(bufferPosition + 2, -1);
             }
             else {
                 setWord(bufferPosition + 1, value1);
             }
-            */
-            setWord(bufferPosition + 1, value1);
             setWord(bufferPosition + 3, value2);
         }
         else {
@@ -294,19 +299,23 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
         bufferPosition += attributePosition * 6;
         if (attributeType != (int)Attribute::NoAttribute) {
             setByte(bufferPosition, attributeType);
-            /*
-            if (value1 < 0) {
+            if (value1 == ValueMinus1) {
+                setByte(bufferPosition + 1, -1);
+                setByte(bufferPosition + 2, 0);
+            }
+            else if (value1 == ValuePlus1) {
+                setByte(bufferPosition + 1, 1);
+                setByte(bufferPosition + 2, 0);
+            }
+            else if (value1 < 0) {
                 setByte(bufferPosition + 1, value1);
                 setByte(bufferPosition + 2, -1);
             }
             else {
                 setWord(bufferPosition + 1, value1);
             }
-            */
-            setWord(bufferPosition + 1, value1);
             setWord(bufferPosition + 3, value2);
             setByte(bufferPosition + 4, 0);
-
         }
         else {
             setByte(bufferPosition + 0, 0);
@@ -320,17 +329,26 @@ void BelzebubChr::setItemValue(const ItemPosition itemPosition, const int attrib
     }
 }
 
-void BelzebubChr::setItemAttribute(const ItemPosition itemPosition, const int attributePosition, const Attribute attribute, const int value1, const int value2) {
+void BelzebubChr::setItemAttribute(const ItemPosition itemPosition, const int attributePosition, const Attribute attribute, int value1, const int value2) {
     const ItemMagic itemMagic = getItemMagic(itemPosition);
-    if ((value1 < -125) || (value2 < -125) || (value1 > 32000) || (value2 > 32000)) {
-        cout << "value too small/big <-125, 32000> in  "  << int(itemPosition) << "." << attributePosition << "  " << value1 << " " << value2 << endl;
-        return;
-    }
+    const AttributeData &attributeData = attrMap.at(attribute);
     if (attributePosition < 0 || attributePosition >= attributeCount.at(itemMagic)) {
         cout << "invalid position <0," << attributeCount.at(itemMagic) - 1 << "> in  "  << int(itemPosition) << "." << attributePosition << "  " << value1 << " " << value2 << endl;
         return;
     }
-    const AttributeData &attributeData = attrMap.at(attribute);
+    if (attributeData.value1Min == ValueMinus1) {
+        value1 = ValueMinus1;
+    }
+    else if (attributeData.value1Min == ValuePlus1) {
+        value1 = ValuePlus1;
+        if (itemPosition == ItemPosition::Head && (attribute == Attribute::UniqueIndestructible || attribute == Attribute::SetIndestructible)) {
+            value1 = ValueMinus1;
+        }
+    }
+    else if ((value1 < -125) || (value2 < -125) || (value1 > 32000) || (value2 > 32000)) {
+        cout << "value too small/big <-125, 32000> in  "  << int(itemPosition) << "." << attributePosition << "  " << value1 << " " << value2 << endl;
+        return;
+    }
     const AttributeMode attributeMode = attributeModeMap.at({itemMagic, attributePosition});
     if (attributeData.mode != attributeMode && attributeData.attribute != Attribute::NoAttribute) {
         cout << "invalid attribute (even/odd/unique/set) in  " << int(itemPosition) << "." << attributePosition << " " << value1 << " " << value2 << endl;
