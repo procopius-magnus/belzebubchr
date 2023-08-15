@@ -12,6 +12,7 @@ SOURCES += \
     ../belzebubchr.cpp \
     main.cpp \
     mainwindow.cpp \
+    recipesdlg.cpp \
     spellsdlg.cpp
 
 HEADERS += \
@@ -19,12 +20,15 @@ HEADERS += \
     ../belzebubchr.h \
     ../file.h \
     ../itemtype.h \
+    ../recipe.h \
     ../spell.h \
     mainwindow.h \
+    recipesdlg.h \
     spellsdlg.h
 
 FORMS += \
     mainwindow.ui \
+    recipesdlg.ui \
     spellsdlg.ui
 
 # Default rules for deployment.

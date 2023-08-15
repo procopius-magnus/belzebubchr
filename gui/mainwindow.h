@@ -50,6 +50,8 @@ private slots:
 
     void on_pushSpells_clicked();
 
+    void on_pushRecipes_clicked();
+
     void on_combo1_currentIndexChanged(int index);
 
     void on_combo2_currentIndexChanged(int index);

@@ -3,6 +3,7 @@
 
 #include "file.h"
 #include "spell.h"
+#include "recipe.h"
 
 #include <vector>
 #include <string>
@@ -25,10 +26,13 @@ public:
     void setDirect(const size_t position, const unsigned char value); // Set value without checksum.
     void setByte(const size_t position, const unsigned char value); // Set value with checksum.
     void setWord(const size_t position, const int value); // Set value with checksum.
+    void updatePositionChecksum(const int position);
     int getByte(const size_t position);
     int getWord(const size_t position);
     void setGoldPositionLowerLeft(const int value); // There must be some gold at the position or it will not work.
     void setGoldPositionLowerRight(const int value); // There must be some gold at the position or it will not work.
+    void turnRecipe(const int position);
+    std::vector<int> getRecipes();
     void setSpellLevel(const Belzebub::SpellType spellType, const int value);
     void setStaffSpell(const Belzebub::SpellType spellType, const int maxCharges);
     Belzebub::ItemMagic getItemMagic(const Belzebub::ItemPosition itemPosition);

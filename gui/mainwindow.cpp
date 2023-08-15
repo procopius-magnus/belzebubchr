@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "spellsdlg.h"
+#include "recipesdlg.h"
 
 #include <QFileDialog>
 #include <QInputDialog>
@@ -133,7 +134,7 @@ void MainWindow::loadChrFile()
 void MainWindow::on_pushDurability_clicked()
 {
     bool ok;
-    int durability = QInputDialog::getInt(this, "Durability", "Maximum Durability: ", belzebubChr.getItemDurability(currentItemPosition), 1, 250, 1, &ok);
+    int durability = QInputDialog::getInt(this, "Durability", "Maximum Durability: ", belzebubChr.getItemDurability(currentItemPosition), 1, 125, 1, &ok);
     if (ok) {
         belzebubChr.setItemDurability(currentItemPosition, durability);
         ui->labelDurability->setText(QString::number(belzebubChr.getItemDurability(currentItemPosition)));
@@ -441,6 +442,16 @@ void MainWindow::on_pushSpells_clicked()
                 continue;
             }
             belzebubChr.setSpellLevel(spellType, spellsDlg.spinBoxVec[i]->value());
+        }
+    }
+}
+
+void MainWindow::on_pushRecipes_clicked()
+{
+    RecipesDlg recipesDlg(belzebubChr.getRecipes());
+    if (recipesDlg.exec() == QDialog::Accepted) {
+        for (const int position : recipesDlg.recipesOn) {
+            belzebubChr.turnRecipe(position);
         }
     }
 }

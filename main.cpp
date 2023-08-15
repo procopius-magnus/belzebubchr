@@ -5,7 +5,7 @@ using namespace std;
 
 int main()
 {
-    if (1) {
+    if (0) {
         // Print attributes on equiped items.
         BelzebubChr belzebubChr;
         belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves/save0.chr");
@@ -16,15 +16,16 @@ int main()
         // Print file differences.
         // Usage: backup your save, then drop one item to the ground and make another save.
         BelzebubChr belzebubChr;
-        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves/save0.chr");
-        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves/save1.chr");
+        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
+        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves3/save0.chr");
         belzebubChr.printDiff();
     }
 
+    if (1)
     {
 
         BelzebubChr belzebubChr;
-        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves/save0.chr");
+        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves3/save0.chr");
 
         if (0) {
             belzebubChr.setGoldPositionLowerLeft(900000);
@@ -90,12 +91,6 @@ int main()
             belzebubChr.setItemValue(Belzebub::ItemPosition::Ring1, i, type, 17);
             belzebubChr.setItemValue(Belzebub::ItemPosition::Ring2, i, type, 17);
         }
-        {
-            // for testing
-            //belzebubChr.setDirect(8, 182 + 2);
-            //belzebubChr.setDirect(2356, 2 -> 0);
-            //belzebubChr.setDirect(4516, 0);
-        }
 
         if (0) {
             // example:
@@ -104,7 +99,7 @@ int main()
             belzebubChr.setStaffSpell(Belzebub::SpellType::ChainLightning, 5000); // You must be equiped with (blue/yellow/orange) staff!
         }
 
-        //belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
+        belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
     }
 
     return 0;

@@ -87,7 +87,8 @@ void BelzebubChr::printDiff()
     cout << "position/signed diff/unsigned diff" << endl;
     size_t c = 0;
     for (size_t i = 0; i < buffer1.size(); ++i) {
-        if (buffer1[i] != buffer2[i] || i == 12 || i == 13 || (1 && i < c) || (0 && i == 8376)) {
+        if (buffer1[i] != buffer2[i] || i == 4 || i == 12 || i == 13 || (0 && i < c) || (0 && i == 8376)
+            ) {
             if (c == 0 && i >= 8280) {
                 c = i + 100;
             }
@@ -163,6 +164,16 @@ void BelzebubChr::setWord(const size_t position, const int value) {
     setByte(position + 1, value / 256);
 }
 
+void BelzebubChr::updatePositionChecksum(const int position)
+{
+    union __attribute__ ((packed)) ChecksumType {
+        char byte[4];
+        int word;
+    };
+    ChecksumType &checksum = (ChecksumType&)buffer1[8];
+    checksum.word += position;
+}
+
 int BelzebubChr::getByte(const size_t position) {
     return (unsigned char)buffer1[position];
 }
@@ -184,6 +195,37 @@ void BelzebubChr::setGoldPositionLowerRight(const int value) {
     setByte(16632, value % 256);
     setByte(16633, value / 256);
     setByte(16634, value / 65536);
+}
+
+void BelzebubChr::turnRecipe(int position) {
+    if (position > 0) {
+        if (buffer1[position] == 1) {
+            return;
+        }
+        setDirect(16693, (unsigned char)buffer1[16693] + 1);
+        setByte(position, 1);
+        updatePositionChecksum(position);
+    }
+    else if (position < 0) {
+        position = std::abs(position);
+        if (buffer1[position] == 0) {
+            return;
+        }
+        setDirect(16693, (unsigned char)buffer1[16693] - 1);
+        setByte(position, 0);
+        updatePositionChecksum(-position);
+    }
+}
+
+std::vector<int> BelzebubChr::getRecipes()
+{
+    vector<int> result;
+    for (int i = (int)RecipeType::TransmuteRegularGem; i < (int)RecipeType::End; ++i) {
+        if (buffer1[i] == 1) {
+            result.push_back(i);
+        }
+    }
+    return result;
 }
 
 void BelzebubChr::setSpellLevel(const Belzebub::SpellType spellType, const int value) {
