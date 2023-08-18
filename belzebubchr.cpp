@@ -49,10 +49,11 @@ void BelzebubChr::updateChecksum(const size_t position, const char value)
 {
     union __attribute__ ((packed)) ChecksumType {
         char byte[2];
-        short word;
+        unsigned short word;
     };
     ChecksumType &checksum = (ChecksumType&)buffer1[12];
-    checksum.word += buffer1[position] - value;
+    //cout << int(buffer1[position]) << " " << int(value) << " " << int(buffer1[12]) << " " << int(buffer1[13]) << endl;
+    checksum.word += (unsigned char)buffer1[position] - (unsigned char)value;
 }
 
 void BelzebubChr::saveBuffer(const string &fileName) {
@@ -185,6 +186,7 @@ int BelzebubChr::getWord(const size_t position) {
 void BelzebubChr::setGoldPositionLowerLeft(const int value) {
     setByte(15764, value % 256);
     setByte(15765, value / 256);
+    setByte(15766, value / 65536);
     setByte(15768, value % 256);
     setByte(15769, value / 256);
     setByte(15770, value / 65536);
@@ -192,6 +194,7 @@ void BelzebubChr::setGoldPositionLowerLeft(const int value) {
 void BelzebubChr::setGoldPositionLowerRight(const int value) {
     setByte(16628, value % 256);
     setByte(16629, value / 256);
+    setByte(16630, value / 65536);
     setByte(16632, value % 256);
     setByte(16633, value / 256);
     setByte(16634, value / 65536);

@@ -16,8 +16,8 @@ int main()
         // Print file differences.
         // Usage: backup your save, then drop one item to the ground and make another save.
         BelzebubChr belzebubChr;
-        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
-        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saves3/save0.chr");
+        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/player_save/save1.chr");
+        belzebubChr.loadBuffer2("/home/le/DiabloHD/game_info/data/Data/saver/save1.chr");
         belzebubChr.printDiff();
     }
 
@@ -25,10 +25,10 @@ int main()
     {
 
         BelzebubChr belzebubChr;
-        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saves3/save0.chr");
+        belzebubChr.loadBuffer1("/home/le/DiabloHD/game_info/data/Data/saver/save1.chr");
 
-        if (0) {
-            belzebubChr.setGoldPositionLowerLeft(900000);
+        if (1) {
+            //belzebubChr.setGoldPositionLowerLeft(900000);
             belzebubChr.setGoldPositionLowerRight(900000);
         }
 
@@ -99,7 +99,7 @@ int main()
             belzebubChr.setStaffSpell(Belzebub::SpellType::ChainLightning, 5000); // You must be equiped with (blue/yellow/orange) staff!
         }
 
-        belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save0.chr");
+        belzebubChr.saveBuffer("/home/le/DiabloHD/game_info/data/Data/player_save/save1.chr");
     }
 
     return 0;
