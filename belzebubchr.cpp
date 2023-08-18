@@ -169,7 +169,7 @@ void BelzebubChr::updatePositionChecksum(const int position)
 {
     union __attribute__ ((packed)) ChecksumType {
         char byte[4];
-        int word;
+        unsigned int word;
     };
     ChecksumType &checksum = (ChecksumType&)buffer1[8];
     checksum.word += position;
