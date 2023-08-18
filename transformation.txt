@@ -1,0 +1,37 @@
+value1:
+2 - Slayer • Guardian • Vortex Lord • Balrog
+3 - Fiend • Blink • Gloom • Familiar
+4 - Butcher
+5 - Bone Demon, Red Death, Litch Demon, Undead Balrog
+6 - Diablo
+7 - Weird
+8 - Fallen One, Carver, Devil Kin, Dark One (spear)
+9 - Fallen One, Carver, Devil Kin, Dark One (sword)
+10 - Madburner (Creature Of Flame)
+11 - Winged Demon • Gargoyle • Blood Claw • Death Wing
+12 - Flesh Clan Archer, Stone Clan Archer, Fire Clan Archer, Night Clan Archer
+13 - Lord Sayter
+14 - Flesh Clan, Stone Clan, Fire Clan, Night Clan
+15 - Golem
+16 - Black Knight • Doom Guard • Steel Lord • Blood Knight
+17 - Counselor • Magistrate • Cabalist • Advocate
+18 - Archbishop Lazarus
+19 - Magma Demon • Blood Stone • Hell Stone • Lava Lord
+20 - Overlord • Mud Man • Toad Demon • Flayed One
+21 - Horned Demon • Mud Runner • Frost Charger • Obsidian Lord
+22 - Scavenger • Plague Eater • Shadow Beast • Bone Gasher
+23 - Skeleton, Corpse Axe, Burning Dead, Horror
+24 - Skeleton Archer, Corpse Bow, Burning Dead Archer, Horror Archer
+25 - Skeleton Captain, Corpse Captain, Burning Dead Captain, Horror Captain
+26 - Skeleton King
+27 - Cave Viper • Fire Drake • Gold Viper • Azure Drake
+28 - Hidden • Stalker • Unseen • Illusion Weaver
+29 - Invisible Lord
+31 - Red Storm • Storm Rider • Storm Lord • Maelstorm
+32 - Succubus, Snow Witch, Hell Spawn, Soul Burner
+35 - Ghoul • Rotting Carcass • Black Death
+36 - Warmaggot The Mad?
+37 - Risen Hero
+38 - Fleshdoom?
+
+value2: color
